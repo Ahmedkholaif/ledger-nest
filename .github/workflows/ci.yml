@@ -1,0 +1,49 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env: { POSTGRES_PASSWORD: postgres, POSTGRES_DB: ledger }
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U postgres" --health-interval 2s --health-retries 20
+    env:
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/ledger
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm test
+
+  # Run the Go implementation (ledgerd) and this one against the same database
+  # and prove they are interchangeable.
+  interop:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env: { POSTGRES_PASSWORD: postgres, POSTGRES_DB: ledger }
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U postgres" --health-interval 2s --health-retries 20
+    env:
+      DB: postgres://postgres:postgres@localhost:5432/ledger
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: actions/setup-go@v5
+        with: { go-version: stable }
+      - run: npm ci && npm run build
+      - run: GOPROXY=direct go install github.com/Ahmedkholaif/ledgerd/cmd/ledgerd@main
+      - name: start both services
+        run: |
+          DATABASE_URL="$DB?sslmode=disable" ADDR=:8080 ledgerd > go.log 2>&1 &
+          sleep 2
+          DATABASE_URL=$DB PORT=3000 node dist/main.js > nest.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf localhost:3000/healthz && curl -sf localhost:8080/healthz && break; sleep 1; done
+      - run: scripts/interop.sh
+      - if: failure()
+        run: cat go.log nest.log
