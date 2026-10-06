@@ -2,7 +2,7 @@
 
 [![ci](https://github.com/Ahmedkholaif/ledger-nest/actions/workflows/ci.yml/badge.svg)](https://github.com/Ahmedkholaif/ledger-nest/actions/workflows/ci.yml)
 ![NestJS](https://img.shields.io/badge/NestJS-12-E0234E?logo=nestjs&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql&logoColor=white)
 
 The **double-entry ledger API from [ledgerd](https://github.com/Ahmedkholaif/ledgerd), rebuilt in NestJS**. It keeps the same guarantees: atomic, balanced, idempotent transfers, deadlock-free locking and database-enforced invariants. It's written the way NestJS is meant to be used.
@@ -57,4 +57,4 @@ docker compose up --build        # API on :3000, Swagger UI on :3000/docs
 
 The API is identical to [ledgerd's](https://github.com/Ahmedkholaif/ledgerd#api): `POST /v1/accounts`, `GET /v1/accounts/{id}[/entries]`, `POST /v1/transfers` (with an `Idempotency-Key` header), `GET /v1/transfers/{id}` and `GET /v1/audit`.
 
-**Stack:** NestJS 12 (ESM), TypeScript 7, `pg`, Node's built-in test runner and supertest. There's no ORM: the interesting parts (locking order, `ON CONFLICT`, deferred constraints) are SQL, and they stay visible.
+**Stack:** NestJS 12 (ESM), TypeScript 6, `pg`, Node's built-in test runner and supertest. There's no ORM: the interesting parts (locking order, `ON CONFLICT`, deferred constraints) are SQL, and they stay visible.
